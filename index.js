@@ -9,6 +9,7 @@ const morgan = require('morgan');
 const testRoute = require('./routes/testRoute');
 const CategoryRoute = require('./routes/categoryRoute');
 const ProductRoute = require('./routes/productRoute');
+const UserRoute = require('./routes/userRoute');
 
 const app = express();
 const port = process.env.PORT
@@ -19,8 +20,9 @@ app.use(morgan('dev'));
 
 // using Routes
 app.use('/api', testRoute);
-app.use(CategoryRoute);
-app.use(ProductRoute);
+app.use('/api', CategoryRoute);
+app.use('/api', ProductRoute);
+app.use('/api', UserRoute);
 
 
 app.listen(port, () => {
