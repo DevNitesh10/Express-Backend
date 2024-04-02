@@ -1,5 +1,5 @@
-const UserModel = require('../models/userModel');
-const TokenModel = require('../models/tokenModel');
+const UserModel = require('../model/userModel');
+const TokenModel = require('../model/tokenModel');
 const bcrypt = require('bcrypt')
 const sendEmail = require('../utils/emailSender');
 
