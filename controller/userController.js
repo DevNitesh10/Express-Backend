@@ -272,6 +272,7 @@ exports.signIn = async (req, res) => {
 
 }   
 
+// logout
 exports.logOut = async (req, res) => {
     res.clearCookie("myCookie");
   res.send({message: "Logged out successfully"});
