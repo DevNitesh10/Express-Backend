@@ -7,6 +7,8 @@ const crypto = require('crypto')
 const sendEmail = require('../utils/emailSender');
 // const uuidv1 = require('uuidv1')
 
+const jwt = require('jsonwebtoken')
+
 // register
 exports.register = async(req, res) => {
     let {username, email, password, date_of_birth, gender, street, city, state, zipcode, country, country_code, phone } = req.body
@@ -195,19 +197,27 @@ exports.resetPassword = async (req, res) => {
             }
             
             // update new password and remove the token
-            user.password = req.body.password;
-            user.isVerified = true;
-            delete user.tokens;
+            // user.password = req.body.password;
+            // user.isVerified = true;
+            // delete user.tokens;
+
+            // change password
+            let salt_rounds = await bcrypt.genSalt(10)
+            let hashed_password = await bcrypt.hash(req.body.password, salt_rounds)
 
             // save the user
             user = await user.save();
 
+            if(!user){
+                return res.status(400).json({ error: "Something went wrong." });
+            }
+
             // create a new token for the user and send it in an email
-        const newToken = crypto.randomBytes(24).toString('hex');
-        await TokenModel.create({
-            token: newToken,
-            user: user._id
-        });
+            const newToken = crypto.randomBytes(24).toString('hex');
+            await TokenModel.create({
+                token: newToken,
+                user: user._id
+            });
 
             // create a new token for the user and send it in an email
             // const tokenObject = user.generateToken();
@@ -226,4 +236,43 @@ exports.resetPassword = async (req, res) => {
         }
         
     }
+}
+
+// login
+exports.signIn = async (req, res) => {
+
+    let {email, password} = req.body;
+
+
+    // check if email is registered or not
+    let user = await UserModel.findOne({email})
+    if(!user){
+        return res.status(400).json({error: "Email not registered"})
+    }
+
+    // check if password is correct or not
+    let passwordCheck = await bcrypt.compare(password, user.password)
+    if(!passwordCheck){
+        return res.status(400).json({error: "Invalid Email or Password"})
+    }
+
+    // check if verified or not
+    if(!user.isVerified){
+        return res.status(400).json({error: "User not Verified. Please verify your email first."})
+    }
+
+    // generate token
+    let {username, role, _id} = user;
+    let token = jwt.sign({username, email, role, _id}, process.env.JWT_SECRET);
+
+
+    // send data to frontend
+    res.cookie("myCookie", token, {expiresIn: 86400});
+    res.send({token, user: {username, email, role, _id}});
+
+}   
+
+exports.logOut = async (req, res) => {
+    res.clearCookie("myCookie");
+  res.send({message: "Logged out successfully"});
 }
