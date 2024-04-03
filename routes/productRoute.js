@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { addProduct, getAllProducts, getProductDetails, getProductByCategory, updateProduct, deleteProduct } = require('../controller/productController');
+const { register } = require('../controller/userController');
+const upload = require('../utils/fileUpload')
 
-router.post('/addnewproduct', addProduct);
+router.post('/addnewproduct', upload.single('product_image'), addProduct);
 router.get('/getallproducts', getAllProducts);
 router.get('/getproductdetails/:id', getProductDetails);
 router.get('/getproductbycategory/:category_id', getProductByCategory); 
