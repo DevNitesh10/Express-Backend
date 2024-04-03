@@ -1,7 +1,11 @@
 const UserModel = require('../model/userModel');
+const AddressModel = require('../model/addressModel');
 const TokenModel = require('../model/tokenModel');
+
 const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 const sendEmail = require('../utils/emailSender');
+// const uuidv1 = require('uuidv1')
 
 // register
 exports.register = async(req, res) => {
@@ -21,7 +25,6 @@ exports.register = async(req, res) => {
 
     }
 
-
     // record the address -> _id
     let address = await UserModel.create({
         street, city, state, zipcode, country, country_code, phone
@@ -33,8 +36,10 @@ exports.register = async(req, res) => {
 
 
     // encrypt password
-    let salt = await bcrypt.gensalt(10)
+    let salt = await bcrypt.genSalt(10)
     let hashed_password = await bcrypt.hash(password, salt)
+    // let salt = uuidv1()
+    // let hashed_password = crypto.createHmac('sha256', salt).update('password').digest('hex')
 
     // register
     let new_user = await UserModel.create({
@@ -54,7 +59,7 @@ let token = await TokenModel.create({
 
 // send verification link(generate token) in email
 
-const url = `http://localhost:5000.api.verifyemail/${token.token}`
+const url = `http://localhost:5000.api/verifyemail/${token.token}`
 
 sendEmail({
     from: "noreply@something.com",
@@ -169,4 +174,56 @@ exports.forgetPassword = async (req, res) => {
     }
 
     res.send({ message: "Password reset successfully"})
+}
+
+// reset password
+
+exports.resetPassword = async (req, res) => {
+    // check token if valid or not
+    let token = await TokenModel.findOne({ token: req.params.token })
+    if(!token){
+        return res.status(400).json({ error: "Invalid token or token expired" });
+    }else{
+        // find user
+        let user = await UserModel.findById( token.user );
+        if(!user){
+            return res.status(400).json({ error: "User associated with this token not found" });
+        }else{
+            // check if already verified
+            if(user.isVerified){
+                return res.status(400).json({ error: "User already verified" });
+            }
+            
+            // update new password and remove the token
+            user.password = req.body.password;
+            user.isVerified = true;
+            delete user.tokens;
+
+            // save the user
+            user = await user.save();
+
+            // create a new token for the user and send it in an email
+        const newToken = crypto.randomBytes(24).toString('hex');
+        await TokenModel.create({
+            token: newToken,
+            user: user._id
+        });
+
+            // create a new token for the user and send it in an email
+            // const tokenObject = user.generateToken();
+            // user.tokens = user.tokens.concat(tokenObject);
+            // await user.save()
+    
+            sendEmail({
+                from: "noreply@something.com",
+                to: user.email,
+                subject: "Password Reset Successful",
+                text: "Your password has been reset successfully",
+                html: "<h1>Your password has been reset successfully</h1>"
+            })
+    
+            res.status(200).json({ message: "Password reset successfully" });
+        }
+        
+    }
 }
