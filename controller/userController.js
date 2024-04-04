@@ -7,6 +7,7 @@ const sendEmail = require('../utils/emailSender');
 // const uuidv1 = require('uuidv1')
 
 const jwt = require('jsonwebtoken')
+const {expressjwt} = require('express-jwt')
 
 // register
 exports.register = async(req, res) => {
@@ -288,14 +289,43 @@ exports.getUsersList = async (req, res) => {
 
 // make admin
 exports.makeAdmin = async (req, res) => {
-    let user = await UserModel.findOne({email: req.body.email});
-    if(!user){
-        return res.status(400).json({ error: "User not found" });
+    let users = await UserModel.findOne({email: req.body.email});
+    if(!users){
+        return res.status(400).json({ error: "Email not registered" });
     }
-    user.role = "admin";
-    user = await user.save();
-    if(!user){
+    users.role = 1;
+    users = await users.save();
+    if(!users){
         return res.status(400).json({ error: "Something went wrong" });
     }
-    res.send(user);
+    res.send(users);
 }
+
+// authorization
+// user logged in or not - eg : to view profile
+exports.authorizeLogin = (req, res, next) => expressjwt({
+    algorithms: ['HS256'],
+    secret: process.env.JWT_SECRET,
+})(req, res, (error) => {
+    if(error){
+        return res.status(401).json({ error: "Unauthorized. Log in to continue" });
+    }
+    next();
+})
+
+// authorize --check role
+exports.checkAdmin = (req, res, next) => expressjwt({
+    algorithms: ['HS256'],
+    secret: process.env.JWT_SECRET,
+    userProperty: auth
+})(req, res, (error) => {
+    if(error){
+        return res.status(401).json({ error: "Unauthorized. Log in to continue" });
+    }
+    if(req.auth.role!== 1){
+        return res.status(401).json({ error: "Unauthorized. Log in to continue" });
+    }
+    next();
+})
+
+
