@@ -1,5 +1,4 @@
 const UserModel = require('../model/userModel');
-const AddressModel = require('../model/addressModel');
 const TokenModel = require('../model/tokenModel');
 
 const bcrypt = require('bcrypt')
@@ -276,4 +275,27 @@ exports.signIn = async (req, res) => {
 exports.logOut = async (req, res) => {
     res.clearCookie("myCookie");
   res.send({message: "Logged out successfully"});
+}
+
+// userlist
+exports.getUsersList = async (req, res) => {
+    let users = await UserModel.find();
+    if(!users){
+        return res.status(400).json({ error: "Something went wrong" });
+    }
+    res.send(users);
+}
+
+// make admin
+exports.makeAdmin = async (req, res) => {
+    let user = await UserModel.findOne({email: req.body.email});
+    if(!user){
+        return res.status(400).json({ error: "User not found" });
+    }
+    user.role = "admin";
+    user = await user.save();
+    if(!user){
+        return res.status(400).json({ error: "Something went wrong" });
+    }
+    res.send(user);
 }

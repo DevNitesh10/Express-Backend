@@ -17,11 +17,11 @@ const userSchema = new mongoose.Schema({
     },
     date_of_birth: {
         type: Date,
-        required: true
+        // required: true
     },
     gender:{
         type: String,
-        required: true
+        // required: true
     },
     isVerified:{
         type: Boolean,
