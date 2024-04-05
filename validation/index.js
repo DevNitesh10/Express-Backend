@@ -3,7 +3,6 @@ const {validationResult, check} = require('express-validator')
 exports.categoryCheck = [
     check('category_name', 'Category Name is required').notEmpty().isLength({min:3})
     .withMessage('Category Name must be at least 3 characters'),
-
 ]
 
 exports.validate = (req, res, next) => {
@@ -14,3 +13,18 @@ exports.validate = (req, res, next) => {
     }
     next()
 }
+
+exports.productCheck = [
+    check('title', 'Product title is required').notEmpty()
+    .isLength({min:3}).withMessage('Product name must be at least 3 characters'),
+
+    check('price', 'Product price is required').notEmpty()
+    .isNumeric().withMessage('Price must be a Number'),
+
+    check('description', 'Product description is required').notEmpty()
+    .isLength({ min:20 }).withMessage('Description must be at least 10 characters'),
+
+    check('count_in_stock', 'Count in stock is required').notEmpty()
+    .isNumeric().withMessage('Count must be a number')
+
+]
