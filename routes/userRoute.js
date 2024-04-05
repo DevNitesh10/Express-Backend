@@ -3,7 +3,7 @@ const { register, verifyUser, resendVerification, forgetPassword, resetPassword,
 const { userCheck, validate } = require('../validation');
 const router = express.Router();
 
-router.post('/register', userCheck, validate ,register)
+router.post('/register' ,register)
 router.get('/verifyemail/:token', verifyUser)
 router.post('/resendverification', resendVerification)
 router.post('/forgetpassword', forgetPassword)

@@ -37,6 +37,7 @@ exports.userCheck = [
     .isEmail().withMessage('Email must be a valid email'),
     
     check('password','Password is required').notEmpty()
+    .not().matches('as').withMessage('Ignore Common Word')
     .matches(/[a-z]/).withMessage('Password must contain at least 1 lowercase alphabet')
     .matches(/[A-Z]/).withMessage('Password must contain at least 1 Upper case alphabet')
     .matches(/[0-9]/).withMessage('Password must contain at least 1 Number')
